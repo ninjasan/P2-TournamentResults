@@ -86,11 +86,13 @@ def reportMatch(winner, loser):
     """
     conn = connect()
     cursor = conn.cursor()
+
+    # First update each players record
     cursor.execute("UPDATE players SET wins = wins+1 WHERE id=(%s);", (winner,))
     cursor.execute("UPDATE players SET losses = losses+1 WHERE id=(%s);", (loser,))
     conn.commit()
-    conn.close()
 
+    conn.close()
 
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
@@ -109,16 +111,32 @@ def swissPairings():
     """
     conn = connect()
     cursor = conn.cursor()
+
+    # Get latest standings
     standings = playerStandings()
+
+    # Determine what round is coming up
     cursor.execute("SELECT MAX(round) FROM matches;")
-    curRound = cursor.fetchone()[0]
-    if type(curRound) != int:
-        curRound = 0
-    for rank in range(0, len(standings), 2):
+    cur_round = cursor.fetchone()[0]
+    if type(cur_round) != int:
+        cur_round = 0
+
+    # Determine if someone gets a bye
+    start_index = 0;
+    if len(standings) % 2 != 0:
+        # The top player gets a bye
+        cursor.execute(
+                "INSERT INTO matches (round, player_1_id) VALUES ((%s), (%s));",
+                (cur_round, standings[start_index][0],))
+        conn.commit()
+        start_index += 1
+    # Match up the players that don't have a bye
+    for rank in range(start_index, len(standings), 2):
         cursor.execute(
             "INSERT INTO matches (round, player_1_id, player_2_id) VALUES ((%s), (%s), (%s));",
-            (curRound, standings[rank][0], standings[rank + 1][0],))
+            (cur_round, standings[rank][0], standings[rank + 1][0],))
         conn.commit()
+
     cursor.execute('''SELECT player_1_id,
                              players1.full_name,
                              player_2_id,

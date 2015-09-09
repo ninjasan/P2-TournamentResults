@@ -34,13 +34,15 @@ CREATE TABLE players (id serial primary key,
 -- Create the matches table.
 -- This table is used to track all the matches between players in a tournament
 -- The columns in this table are
---     round: the round the players are competing in
+--     id: the unique identifier for this match in the tournament
+--     round: the round the players are competing in for this match
 --     player_1_id: the unique id of the first player in this match
 --     player_2_id: the unique id of the second player in this match
---     match_result: the id of the winner in this match
-CREATE TABLE matches (  round integer,
-                        player_1_id integer references players (id),
-                        player_2_id integer references players (id),
-                        match_result integer,
-                        primary key (round, player_1_id, player_2_id)
+--                  this value might be NULL. This means that player 1 had a bye.
+CREATE TABLE matches (  id serial PRIMARY KEY,
+                        round integer,
+                        player_1_id integer NULL,
+                        player_2_id integer NULL,
+                        FOREIGN KEY (player_1_id) REFERENCES players (id),
+                        FOREIGN KEY (player_2_id) REFERENCES players (id)
                      );
