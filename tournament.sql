@@ -18,40 +18,30 @@ DROP TABLE tournaments;
 DROP TABLE players;
 DROP TABLE matches;
 
--- Create the tournaments table, if it doesn't already exist
--- This table will hold all the different activities/sports that players
--- are competing against each other in.
--- The columns in this table are
---     id: the unique identifier for this tournament
---         this is also the primary key
---     sport: the sport/activity players are competing in
-CREATE TABLE tournaments (id serial primary key, sport text);
-
--- Insert into the tournaments table, a sport/activity that people are
--- competing in.
---INSERT INTO tournaments (sport) VALUES ('chess');
-
 -- Create the players table.
 -- This table is used to track all the players in each of the tournaments
 -- The columns in this table are
 --     id: the unique identifier for this tournament
 --         this is also the primary key
---     tournament_id: the id of the tournament this player is competing in
 --     full_name: the full name of the player
 --     wins: the number of wins the player has in this tournament
 --     losses: the number of losses the player has in this tournament
 CREATE TABLE players (id serial primary key,
-                        tournament_id integer references tournaments (id),
                         full_name text,
                         wins integer DEFAULT 0,
-                        losses integer DEFAULT 0,
-                        );
+                        losses integer DEFAULT 0
+                     );
 
 -- Create the matches table.
-CREATE TABLE matches (tournament_id integer references tournaments (id),
-                        round integer,
+-- This table is used to track all the matches between players in a tournament
+-- The columns in this table are
+--     round: the round the players are competing in
+--     player_1_id: the unique id of the first player in this match
+--     player_2_id: the unique id of the second player in this match
+--     match_result: the id of the winner in this match
+CREATE TABLE matches (  round integer,
                         player_1_id integer,
                         player_2_id integer,
                         match_result integer,
-                        primary key (tournament_id, round, player_1_id, player_2_id)
-                        );
+                        primary key (round, player_1_id, player_2_id)
+                     );

@@ -11,35 +11,35 @@ def connect():
     return psycopg2.connect("dbname=tournament")
 
 
-def deleteMatches(tournament_id):
+def deleteMatches():
     """Remove all the match records from the database."""
     conn = connect()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM matches WHERE tournament_id=(%s);", (tournament_id,))
+    cursor.execute("DELETE FROM matches;")
     conn.commit()
     conn.close()
 
 
-def deletePlayers(tournament_id):
+def deletePlayers():
     """Remove all the player records from the database."""
     conn = connect()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM players WHERE tournament_id=(%s);", (tournament_id,))
+    cursor.execute("DELETE FROM players;")
     conn.commit()
     conn.close()
 
 
-def countPlayers(tournament_id):
+def countPlayers():
     """Returns the number of players currently registered."""
     conn = connect()
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(id) FROM players WHERE tournament_id=(%s);", (tournament_id,))
+    cursor.execute("SELECT COUNT(id) FROM players;")
     result = cursor.fetchone()[0]
     conn.close()
     return result
 
 
-def registerPlayer(name, tournament_id):
+def registerPlayer(name):
     """Adds a player to the tournament database.
   
     The database assigns a unique serial id number for the player.  (This
@@ -50,12 +50,12 @@ def registerPlayer(name, tournament_id):
     """
     conn = connect()
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO players (tournament_id, full_name) VALUES (%s, %s);", (tournament_id, name,))
+    cursor.execute("INSERT INTO players (full_name) VALUES (%s);", (name,))
     conn.commit()
     conn.close()
 
 
-def playerStandings(tournament_id):
+def playerStandings():
     """Returns a list of the players and their win records, sorted by wins.
 
     The first entry in the list should be the player in first place, or a player
@@ -71,14 +71,13 @@ def playerStandings(tournament_id):
     conn = connect()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT id, full_name, wins, (wins + losses) AS matches FROM players WHERE tournament_id=(%s) ORDER BY wins DESC;",
-        (tournament_id,))
+        "SELECT id, full_name, wins, (wins + losses) AS matches FROM players ORDER BY wins DESC;")
     results = cursor.fetchall()
     conn.close()
     return results
 
 
-def reportMatch(winner, loser, tournament_id):
+def reportMatch(winner, loser):
     """Records the outcome of a single match between two players.
 
     Args:
@@ -87,14 +86,13 @@ def reportMatch(winner, loser, tournament_id):
     """
     conn = connect()
     cursor = conn.cursor()
-    cursor.execute("UPDATE players SET wins = wins+1 WHERE tournament_id = (%s) AND id=(%s);", (tournament_id, winner,))
-    cursor.execute("UPDATE players SET losses = losses+1 WHERE tournament_id = (%s) AND id=(%s);",
-                   (tournament_id, loser,))
+    cursor.execute("UPDATE players SET wins = wins+1 WHERE id=(%s);", (winner,))
+    cursor.execute("UPDATE players SET losses = losses+1 WHERE id=(%s);", (loser,))
     conn.commit()
     conn.close()
 
 
-def swissPairings(tournament_id):
+def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
   
     Assuming that there are an even number of players registered, each player
@@ -111,15 +109,15 @@ def swissPairings(tournament_id):
     """
     conn = connect()
     cursor = conn.cursor()
-    standings = playerStandings(tournament_id)
-    cursor.execute("SELECT MAX(round) FROM matches WHERE tournament_id=(%s);", (tournament_id,))
+    standings = playerStandings()
+    cursor.execute("SELECT MAX(round) FROM matches;")
     curRound = cursor.fetchone()[0]
     if type(curRound) != int:
         curRound = 0
     for rank in range(0, len(standings), 2):
         cursor.execute(
-            "INSERT INTO matches (tournament_id, round, player_1_id, player_2_id) VALUES ((%s), (%s), (%s), (%s));",
-            (tournament_id, curRound, standings[rank][0], standings[rank + 1][0],))
+            "INSERT INTO matches (round, player_1_id, player_2_id) VALUES ((%s), (%s), (%s));",
+            (curRound, standings[rank][0], standings[rank + 1][0],))
         conn.commit()
     cursor.execute('''SELECT player_1_id,
                              players1.full_name,
@@ -129,10 +127,7 @@ def swissPairings(tournament_id):
                       INNER JOIN players AS players1
                       ON matches.player_1_id = players1.id
                       INNER JOIN players AS players2
-                      ON matches.player_2_id = players2.id
-                      WHERE matches.tournament_id=(%s)
-                        AND players1.tournament_id=(%s)
-                        AND players2.tournament_id=(%s);''', (tournament_id, tournament_id, tournament_id,))
+                      ON matches.player_2_id = players2.id;''')
     results = cursor.fetchall()
     conn.close()
     return results

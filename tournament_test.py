@@ -5,20 +5,20 @@
 from tournament import *
 
 def testDeleteMatches():
-    deleteMatches(1)
+    deleteMatches()
     print "1. Old matches can be deleted."
 
 
 def testDelete():
-    deleteMatches(1)
-    deletePlayers(1)
+    deleteMatches()
+    deletePlayers()
     print "2. Player records can be deleted."
 
 
 def testCount():
-    deleteMatches(1)
-    deletePlayers(1)
-    c = countPlayers(1)
+    deleteMatches()
+    deletePlayers()
+    c = countPlayers()
     if c == '0':
         raise TypeError(
             "countPlayers() should return numeric zero, not string '0'.")
@@ -28,10 +28,10 @@ def testCount():
 
 
 def testRegister():
-    deleteMatches(1)
-    deletePlayers(1)
-    registerPlayer("Chandra Nalaar", 1)
-    c = countPlayers(1)
+    deleteMatches()
+    deletePlayers()
+    registerPlayer("Chandra Nalaar")
+    c = countPlayers()
     if c != 1:
         raise ValueError(
             "After one player registers, countPlayers() should be 1.")
@@ -39,29 +39,29 @@ def testRegister():
 
 
 def testRegisterCountDelete():
-    deleteMatches(1)
-    deletePlayers(1)
-    registerPlayer("Markov Chaney", 1)
-    registerPlayer("Joe Malik", 1)
-    registerPlayer("Mao Tsu-hsi", 1)
-    registerPlayer("Atlanta Hope", 1)
-    c = countPlayers(1)
+    deleteMatches()
+    deletePlayers()
+    registerPlayer("Markov Chaney")
+    registerPlayer("Joe Malik")
+    registerPlayer("Mao Tsu-hsi")
+    registerPlayer("Atlanta Hope")
+    c = countPlayers()
     if c != 4:
         raise ValueError(
             "After registering four players, countPlayers should be 4.")
-    deletePlayers(1)
-    c = countPlayers(1)
+    deletePlayers()
+    c = countPlayers()
     if c != 0:
         raise ValueError("After deleting, countPlayers should return zero.")
     print "5. Players can be registered and deleted."
 
 
 def testStandingsBeforeMatches():
-    deleteMatches(1)
-    deletePlayers(1)
-    registerPlayer("Melpomene Murray", 1)
-    registerPlayer("Randy Schwartz", 1)
-    standings = playerStandings(1)
+    deleteMatches()
+    deletePlayers()
+    registerPlayer("Melpomene Murray")
+    registerPlayer("Randy Schwartz")
+    standings = playerStandings()
     if len(standings) < 2:
         raise ValueError("Players should appear in playerStandings even before "
                          "they have played any matches.")
@@ -80,17 +80,17 @@ def testStandingsBeforeMatches():
 
 
 def testReportMatches():
-    deleteMatches(1)
-    deletePlayers(1)
-    registerPlayer("Bruno Walton", 1)
-    registerPlayer("Boots O'Neal", 1)
-    registerPlayer("Cathy Burton", 1)
-    registerPlayer("Diane Grant", 1)
-    standings = playerStandings(1)
+    deleteMatches()
+    deletePlayers()
+    registerPlayer("Bruno Walton")
+    registerPlayer("Boots O'Neal")
+    registerPlayer("Cathy Burton")
+    registerPlayer("Diane Grant")
+    standings = playerStandings()
     [id1, id2, id3, id4] = [row[0] for row in standings]
-    reportMatch(id1, id2, 1)
-    reportMatch(id3, id4, 1)
-    standings = playerStandings(1)
+    reportMatch(id1, id2)
+    reportMatch(id3, id4)
+    standings = playerStandings()
     for (i, n, w, m) in standings:
         if m != 1:
             raise ValueError("Each player should have one match recorded.")
@@ -102,17 +102,17 @@ def testReportMatches():
 
 
 def testPairings():
-    deleteMatches(1)
-    deletePlayers(1)
-    registerPlayer("Twilight Sparkle", 1)
-    registerPlayer("Fluttershy", 1)
-    registerPlayer("Applejack", 1)
-    registerPlayer("Pinkie Pie", 1)
-    standings = playerStandings(1)
+    deleteMatches()
+    deletePlayers()
+    registerPlayer("Twilight Sparkle")
+    registerPlayer("Fluttershy")
+    registerPlayer("Applejack")
+    registerPlayer("Pinkie Pie")
+    standings = playerStandings()
     [id1, id2, id3, id4] = [row[0] for row in standings]
-    reportMatch(id1, id2, 1)
-    reportMatch(id3, id4, 1)
-    pairings = swissPairings(1)
+    reportMatch(id1, id2)
+    reportMatch(id3, id4)
+    pairings = swissPairings()
     if len(pairings) != 2:
         raise ValueError(
             "For four players, swissPairings should return two pairs.")
