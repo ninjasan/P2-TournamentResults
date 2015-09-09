@@ -3,137 +3,108 @@
 # Test cases for tournament.py
 
 from tournament import *
+from random import randint
+from math import log, ceil
 
-def testDeleteMatches():
-    deleteMatches(1)
-    print "1. Old matches can be deleted."
+def clean_tables():
+    # Start from a clean slate
+    deleteMatches()
+    deletePlayers()
 
-
-def testDelete():
-    deleteMatches(1)
-    deletePlayers(1)
-    print "2. Player records can be deleted."
-
-
-def testCount():
-    deleteMatches(1)
-    deletePlayers(1)
-    c = countPlayers(1)
-    if c == '0':
-        raise TypeError(
-            "countPlayers() should return numeric zero, not string '0'.")
+    # Verify starting from a clean slate
+    c = countPlayers()
     if c != 0:
         raise ValueError("After deleting, countPlayers should return zero.")
-    print "3. After deleting, countPlayers() returns zero."
+    else:
+        print "Old data removed!"
 
+def get_final_results():
+    standings = playerStandings()
+    print standings
+    id1 = (standings[0])[0]
+    print "And the winner is: ", id1
 
-def testRegister():
-    deleteMatches(1)
-    deletePlayers(1)
-    registerPlayer("Chandra Nalaar", 1)
-    c = countPlayers(1)
-    if c != 1:
-        raise ValueError(
-            "After one player registers, countPlayers() should be 1.")
-    print "4. After registering a player, countPlayers() returns 1."
+def add_four_players():
+    # Add 4 players into players table
+    registerPlayer("Ross Gellar")
+    registerPlayer("Monica Gellar")
+    registerPlayer("Rachel Green")
+    registerPlayer("Chandler Bing")
 
-
-def testRegisterCountDelete():
-    deleteMatches(1)
-    deletePlayers(1)
-    registerPlayer("Markov Chaney", 1)
-    registerPlayer("Joe Malik", 1)
-    registerPlayer("Mao Tsu-hsi", 1)
-    registerPlayer("Atlanta Hope", 1)
-    c = countPlayers(1)
+    # Verify four players are registered
+    c = countPlayers()
     if c != 4:
-        raise ValueError(
-            "After registering four players, countPlayers should be 4.")
-    deletePlayers(1)
-    c = countPlayers(1)
-    if c != 0:
-        raise ValueError("After deleting, countPlayers should return zero.")
-    print "5. Players can be registered and deleted."
+        raise ValueError("After registering, countPlayers should return four.")
+    else:
+        print "Players Registered!"
 
+def add_even_players():
+    # How many players should be in this tournament, and make sure it's even
+    num = randint(2, 16)
+    if num % 2 != 0:
+        num -= 1
 
-def testStandingsBeforeMatches():
-    deleteMatches(1)
-    deletePlayers(1)
-    registerPlayer("Melpomene Murray", 1)
-    registerPlayer("Randy Schwartz", 1)
-    standings = playerStandings(1)
-    if len(standings) < 2:
-        raise ValueError("Players should appear in playerStandings even before "
-                         "they have played any matches.")
-    elif len(standings) > 2:
-        raise ValueError("Only registered players should appear in standings.")
-    if len(standings[0]) != 4:
-        raise ValueError("Each playerStandings row should have four columns.")
-    [(id1, name1, wins1, matches1), (id2, name2, wins2, matches2)] = standings
-    if matches1 != 0 or matches2 != 0 or wins1 != 0 or wins2 != 0:
-        raise ValueError(
-            "Newly registered players should have no matches or wins.")
-    if set([name1, name2]) != set(["Melpomene Murray", "Randy Schwartz"]):
-        raise ValueError("Registered players' names should appear in standings, "
-                         "even if they have no matches played.")
-    print "6. Newly registered players appear in the standings with no matches."
+    # register that many players
+    for player in range(0, num):
+        registerPlayer("first last")
 
+    c = countPlayers()
+    if c != num:
+        raise ValueError("After registering, countPlayers should return", num)
+    else:
+        print "Players Registered!", num
 
-def testReportMatches():
-    deleteMatches(1)
-    deletePlayers(1)
-    registerPlayer("Bruno Walton", 1)
-    registerPlayer("Boots O'Neal", 1)
-    registerPlayer("Cathy Burton", 1)
-    registerPlayer("Diane Grant", 1)
-    standings = playerStandings(1)
+def testScenario_BasicFourPersonTournament():
+    clean_tables()
+    add_four_players()
+
+    # Create matches for round 1
+    standings = playerStandings()
+    print standings
     [id1, id2, id3, id4] = [row[0] for row in standings]
-    reportMatch(id1, id2, 1)
-    reportMatch(id3, id4, 1)
-    standings = playerStandings(1)
-    for (i, n, w, m) in standings:
-        if m != 1:
-            raise ValueError("Each player should have one match recorded.")
-        if i in (id1, id3) and w != 1:
-            raise ValueError("Each match winner should have one win recorded.")
-        elif i in (id2, id4) and w != 0:
-            raise ValueError("Each match loser should have zero wins recorded.")
-    print "7. After a match, players have updated standings."
-
-
-def testPairings():
-    deleteMatches(1)
-    deletePlayers(1)
-    registerPlayer("Twilight Sparkle", 1)
-    registerPlayer("Fluttershy", 1)
-    registerPlayer("Applejack", 1)
-    registerPlayer("Pinkie Pie", 1)
-    standings = playerStandings(1)
-    [id1, id2, id3, id4] = [row[0] for row in standings]
-    reportMatch(id1, id2, 1)
-    reportMatch(id3, id4, 1)
-    pairings = swissPairings(1)
+    pairings = swissPairings()
     if len(pairings) != 2:
         raise ValueError(
             "For four players, swissPairings should return two pairs.")
-    [(pid1, pname1, pid2, pname2), (pid3, pname3, pid4, pname4)] = pairings
-    correct_pairs = set([frozenset([id1, id3]), frozenset([id2, id4])])
-    actual_pairs = set([frozenset([pid1, pid2]), frozenset([pid3, pid4])])
-    if correct_pairs != actual_pairs:
-        raise ValueError(
-            "After one match, players with one win should be paired.")
-    print "8. After one match, players with one win are paired."
+    # Report round 1 results
+    reportMatch(id1, id2)
+    reportMatch(id3, id4)
+
+    # Create matches for round 2
+    standings = playerStandings()
+    print standings
+    [id1, id2, id3, id4] = [row[0] for row in standings]
+    swissPairings()
+    # Report round 1 results
+    reportMatch(id1, id2)
+    reportMatch(id3, id4)
+
+    # Final results
+    get_final_results()
+
+def testScenario_EvenPersonTournament():
+    clean_tables()
+    add_even_players()
+
+    # Run log2(numplayers) rounds
+    num_players = countPlayers()
+    num_rounds = int(ceil(log(num_players, 2)))
+    print num_rounds
+    print num_players
+    for round in range(0, num_rounds):
+        standings = playerStandings()
+        swissPairings()
+
+        # Report results for num_players/2 matches
+        for player in range(0, num_players, 2):
+            reportMatch(standings[player][0], standings[player+1][0])
+
+    get_final_results()
 
 
 if __name__ == '__main__':
-    testDeleteMatches()
-    testDelete()
-    testCount()
-    testRegister()
-    testRegisterCountDelete()
-    testStandingsBeforeMatches()
-    testReportMatches()
-    testPairings()
-    print "Success!  All tests pass!"
+    testScenario_BasicFourPersonTournament()
+    testScenario_EvenPersonTournament()
+    print "Success!  All functional tests pass!"
 
 
