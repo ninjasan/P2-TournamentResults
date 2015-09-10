@@ -70,8 +70,8 @@ def playerStandings():
     """
     conn = connect()
     cursor = conn.cursor()
-    cursor.execute(
-        "SELECT id, full_name, wins, (wins + losses) AS matches FROM players ORDER BY wins DESC;")
+    cursor.execute('''SELECT id, full_name, wins, (wins + losses) AS matches
+                      FROM players ORDER BY wins DESC;''')
     results = cursor.fetchall()
     conn.close()
     return results
@@ -124,22 +124,43 @@ def swissPairings():
         cur_round += 1
 
     # Determine if someone gets a bye
-    start_index = 0
+    player_index = -1
     if len(standings) % 2 != 0:
-        # The top player gets a bye
-        print "Player Id: ", standings[start_index][0], " gets a bye!"
+        # Find the top player that hasn't had a bye yet
+        index = 0
+        while player_index == -1:
+            if (standings[index])[3] == cur_round:
+                player_index = index
+            index += 1
+
+        print "Player Id: ", standings[player_index][0], " gets a bye!"
         cursor.execute(
                 "INSERT INTO matches (round, player_1_id) VALUES ((%s), (%s));",
-                (cur_round, standings[start_index][0],))
+                (cur_round, standings[player_index][0],))
         conn.commit()
-        start_index += 1
 
+    print "STANDINGS: ", standings
     # Match up the players that don't have a bye
-    for rank in range(start_index, len(standings), 2):
+    index = 0
+    while index < len(standings):
+        # Are either of these two players the players with a bye?
+        # If so, adjust the indexes accordingly
+        player1 = index
+        player2 = index + 1
+        if player1 == player_index:
+            player1 += 1
+            player2 += 1
+            index += 1
+        elif player2 == player_index:
+            player2 += 1
+            index += 1
+
+
         cursor.execute(
             "INSERT INTO matches (round, player_1_id, player_2_id) VALUES ((%s), (%s), (%s));",
-            (cur_round, standings[rank][0], standings[rank + 1][0],))
+            (cur_round, standings[player1][0], standings[player2][0],))
         conn.commit()
+        index += 2
 
     # Get the pair tuples to return
     cursor.execute('''SELECT player_1_id,
