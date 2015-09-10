@@ -3,8 +3,9 @@
 # Test cases for tournament.py
 
 from tournament import *
-from random import randint
+from random import randint, random
 from math import log, ceil
+
 
 def clean_tables():
     # Start from a clean slate
@@ -18,29 +19,6 @@ def clean_tables():
     else:
         print "Old data removed!"
 
-def play_tournament(players, rounds):
-    print "Players in tournament: ", players
-    print "Rounds to Play: ", rounds
-    for round in range(0, rounds):
-        standings = playerStandings()
-        swissPairings()
-
-        # Report results for num_players/2 matches
-        for player in range(0, players, 2):
-            reportMatch(standings[player][0], standings[player+1][0])
-
-
-def get_final_results():
-    standings = playerStandings()
-    print standings
-    id1 = (standings[0])[0]
-    winsToBeat = (standings[0])[2]
-    for player in range(1, len(standings)):
-        if (standings[player])[2] > winsToBeat:
-            raise ValueError("Your winner is not the winner!")
-        elif (standings[player])[2] == winsToBeat:
-            raise ValueError("Did you play enough rounds?")
-    print "And the winner is: ", id1
 
 def add_four_players():
     # Add 4 players into players table
@@ -56,6 +34,7 @@ def add_four_players():
     else:
         print "Players Registered!"
 
+
 def add_even_players():
     # How many players should be in this tournament, and make sure it's even
     num = randint(2, 128)
@@ -66,11 +45,48 @@ def add_even_players():
     for player in range(0, num):
         registerPlayer("first last")
 
+    # Verify the players all registered
     c = countPlayers()
     if c != num:
         raise ValueError("After registering, countPlayers should return", num)
     else:
         print "Players Registered!", num
+
+
+def play_tournament(players, rounds):
+    print "Players in tournament: ", players
+    print "Rounds to Play: ", rounds
+
+    # Play all the rounds in the tournament
+    for cur_round in range(0, rounds):
+        print "Round: ", cur_round
+        # Create the pairs for this round
+        pairs = swissPairings()
+
+        # Report results for each match matches
+        for pair in range(0, len(pairs)):
+            # The winner of the match is 50:50
+            coin_flip = random()
+            if coin_flip <= 0.5:
+                # Player 1 won the match!
+                reportMatch((pairs[pair])[0], (pairs[pair])[2])
+            else:
+                # Player 2 won the match!
+                reportMatch((pairs[pair])[2], (pairs[pair])[0])
+
+
+def get_final_results():
+    standings = playerStandings()
+    print standings
+    id1 = (standings[0])[0]
+    winsToBeat = (standings[0])[2]
+    for player in range(1, len(standings)):
+        if (standings[player])[2] > winsToBeat:
+            raise ValueError("Your winner is not the winner!")
+        elif (standings[player])[2] == winsToBeat:
+            print "There's a tie with: ", (standings[player])[0]
+    print "And the winner is: ", id1
+
 
 def testScenario_BasicFourPersonTournament():
     clean_tables()
