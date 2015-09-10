@@ -35,11 +35,18 @@ def add_four_players():
         print "Players Registered!"
 
 
-def add_even_players():
+def add_players(isEven):
+    """
+
+    :rtype : object
+    """
+
     # How many players should be in this tournament, and make sure it's even
-    num = randint(2, 128)
-    if num % 2 != 0:
+    num = randint(2, 256)
+    if isEven and num % 2 != 0:
         num -= 1
+    elif not isEven and num % 2 == 0:
+        num += 1
 
     # register that many players
     for player in range(0, num):
@@ -100,7 +107,19 @@ def testScenario_BasicFourPersonTournament():
 
 def testScenario_EvenPersonTournament():
     clean_tables()
-    add_even_players()
+    add_players(True)
+
+    # Run log2(numplayers) rounds
+    num_players = countPlayers()
+    num_rounds = int(ceil(log(num_players, 2)))
+    play_tournament(num_players, num_rounds)
+
+    get_final_results()
+
+
+def testScenario_OddPersonTournament():
+    clean_tables()
+    add_players(False)
 
     # Run log2(numplayers) rounds
     num_players = countPlayers()
@@ -112,6 +131,7 @@ def testScenario_EvenPersonTournament():
 if __name__ == '__main__':
     testScenario_BasicFourPersonTournament()
     testScenario_EvenPersonTournament()
+    testScenario_OddPersonTournament()
     print "Success!  All functional tests pass!"
 
 
