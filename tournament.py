@@ -120,16 +120,20 @@ def swissPairings():
     cur_round = cursor.fetchone()[0]
     if type(cur_round) != int:
         cur_round = 0
+    else:
+        cur_round += 1
 
     # Determine if someone gets a bye
-    start_index = 0;
+    start_index = 0
     if len(standings) % 2 != 0:
         # The top player gets a bye
+        print "Player Id: ", standings[start_index][0], " gets a bye!"
         cursor.execute(
                 "INSERT INTO matches (round, player_1_id) VALUES ((%s), (%s));",
                 (cur_round, standings[start_index][0],))
         conn.commit()
         start_index += 1
+
     # Match up the players that don't have a bye
     for rank in range(start_index, len(standings), 2):
         cursor.execute(
@@ -137,6 +141,7 @@ def swissPairings():
             (cur_round, standings[rank][0], standings[rank + 1][0],))
         conn.commit()
 
+    # Get the pair tuples to return
     cursor.execute('''SELECT player_1_id,
                              players1.full_name,
                              player_2_id,
@@ -145,7 +150,8 @@ def swissPairings():
                       INNER JOIN players AS players1
                       ON matches.player_1_id = players1.id
                       INNER JOIN players AS players2
-                      ON matches.player_2_id = players2.id;''')
+                      ON matches.player_2_id = players2.id
+                      WHERE round = (%s);''', (cur_round,))
     results = cursor.fetchall()
     conn.close()
     return results
