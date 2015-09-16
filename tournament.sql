@@ -14,6 +14,7 @@
 \c tournament;
 
 -- Drop the all the tables, to start from a clean slate.
+DROP VIEW standings;
 DROP TABLE matches;
 DROP TABLE players;
 
@@ -53,29 +54,36 @@ CREATE TABLE matches (  id serial PRIMARY KEY,
 --     id: the unique identifier for the player in the tournament
 --     full_name: the name of the player
 --     wins: the number of matches this player has won in this tournament
---     matches: the total number of matches this player has played in
-                the tournament
+--     matches_count: the total number of matches this player has played in
+--                    the tournament
+--                    NOTE: if the player has a bye, that is not counted as
+--                    a match.
 --     opp_wins: the combined total number of wins from the opponents of this
-                 particular player
+--               particular player
 CREATE VIEW standings AS
     SELECT id,
            full_name,
            wins,
-           (wins + losses) AS matches,
-           (SELECT SUM(wins) AS opp_wins
+           (SELECT COUNT(*)
+            FROM matches
+            WHERE (matches.player_1_id = players.id AND
+                   matches.player_2_id IS NOT NULL) OR
+                  (matches.player_2_id = players.id)) AS matches_count,
+           (SELECT SUM(OpponentMatches.wins)
             FROM (SELECT player_1_id,
-                      players1.wins
-               FROM matches
-                   INNER JOIN players AS players1
-                   ON matches.player_1_id = players1.id
-               WHERE player_2_id = players.id
-               UNION ALL
-               SELECT player_2_id,
-                      players2.wins
-               FROM matches
-                   INNER JOIN players AS players2
-                   ON matches.player_2_id = players2.id
-               WHERE player_1_id = players.id)
-               AS opponentResults)
+                          players1.wins
+                   FROM matches
+                       INNER JOIN players AS players1
+                       ON matches.player_1_id = players1.id
+                   WHERE player_2_id = players.id
+                   UNION ALL
+                   SELECT player_2_id,
+                          players2.wins
+                   FROM matches
+                       INNER JOIN players AS players2
+                       ON matches.player_2_id = players2.id
+                   WHERE player_1_id = players.id)
+                   AS OpponentMatches)
+            AS opp_wins
     FROM players
     ORDER BY wins DESC, opp_wins DESC;
