@@ -70,8 +70,8 @@ def playerStandings():
     """
     conn = connect()
     cursor = conn.cursor()
-    cursor.execute('''SELECT id, full_name, wins, (wins + losses) AS matches
-                      FROM players ORDER BY wins DESC;''')
+    cursor.execute('''SELECT id, full_name, wins, matches
+                      FROM standings;''')
     results = cursor.fetchall()
     conn.close()
     return results

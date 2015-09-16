@@ -46,3 +46,36 @@ CREATE TABLE matches (  id serial PRIMARY KEY,
                         FOREIGN KEY (player_1_id) REFERENCES players (id),
                         FOREIGN KEY (player_2_id) REFERENCES players (id)
                      );
+
+-- Create a View for the Current Standings.
+-- This View ranks all the players by wins first, and then OpponentMatchWins
+-- The View is structured as follows
+--     id: the unique identifier for the player in the tournament
+--     full_name: the name of the player
+--     wins: the number of matches this player has won in this tournament
+--     matches: the total number of matches this player has played in
+                the tournament
+--     opp_wins: the combined total number of wins from the opponents of this
+                 particular player
+CREATE VIEW standings AS
+    SELECT id,
+           full_name,
+           wins,
+           (wins + losses) AS matches,
+           (SELECT SUM(wins) AS opp_wins
+            FROM (SELECT player_1_id,
+                      players1.wins
+               FROM matches
+                   INNER JOIN players AS players1
+                   ON matches.player_1_id = players1.id
+               WHERE player_2_id = players.id
+               UNION ALL
+               SELECT player_2_id,
+                      players2.wins
+               FROM matches
+                   INNER JOIN players AS players2
+                   ON matches.player_2_id = players2.id
+               WHERE player_1_id = players.id)
+               AS opponentResults)
+    FROM players
+    ORDER BY wins DESC, opp_wins DESC;
