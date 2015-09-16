@@ -8,6 +8,10 @@ from math import log, ceil
 
 
 def clean_tables():
+    """
+        Cleans the tables in the database,
+        to start the tests from a clean slate
+    """
     # Start from a clean slate
     deleteMatches()
     deletePlayers()
@@ -21,11 +25,14 @@ def clean_tables():
 
 
 def add_four_players():
+    """
+        Adds a specific number of players to the tournament
+    """
     # Add 4 players into players table
-    registerPlayer("Ross Gellar")
-    registerPlayer("Monica Gellar")
-    registerPlayer("Rachel Green")
-    registerPlayer("Chandler Bing")
+    registerPlayer("Rose Gellar")
+    registerPlayer("Monique Gellar")
+    registerPlayer("Rachel Blue")
+    registerPlayer("Chandler Ping")
 
     # Verify four players are registered
     c = countPlayers()
@@ -35,20 +42,25 @@ def add_four_players():
         print "Players Registered!"
 
 
-def add_players(isEven):
+def add_players(is_even):
+    """
+        Adds a random number of players to the tournament
+        Can add a even number or odd number, to test byes
+
+        Args:
+            is_even: boolean representing if an even or odd
+                     number of players should be added to the tournament.
     """
 
-    :rtype : object
-    """
-
-    # How many players should be in this tournament, and make sure it's even
+    # Pick a pseudo random number of players to add to the tournament
+    # Make the number even or odd depending on the boolean
     num = randint(2, 256)
-    if isEven and num % 2 != 0:
+    if is_even and num % 2 != 0:
         num -= 1
-    elif not isEven and num % 2 == 0:
+    elif not is_even and num % 2 == 0:
         num += 1
 
-    # register that many players
+    # Register that many players
     for player in range(0, num):
         registerPlayer("first last")
 
@@ -60,12 +72,18 @@ def add_players(isEven):
         print "Players Registered!", num
 
 
-def play_tournament(players, rounds):
-    print "Players in tournament: ", players
-    print "Rounds to Play: ", rounds
+def play_tournament():
+    """
+        Runs all the rounds required to determine a winner of the tournament
+    """
+    # Run log2(numplayers) rounds
+    num_players = countPlayers()
+    num_rounds = int(ceil(log(num_players, 2)))
+    print "Players in tournament: ", num_players
+    print "Rounds to Play: ", num_rounds
 
     # Play all the rounds in the tournament
-    for cur_round in range(0, rounds):
+    for cur_round in range(0, num_rounds):
         print "Round: ", cur_round
         # Create the pairs for this round
         pairs = swissPairings()
@@ -83,49 +101,54 @@ def play_tournament(players, rounds):
 
 
 def get_final_results():
+    """
+        Gets the final standings and returns the wimmer based on wins
+        and opponent wins.
+    """
     standings = playerStandings()
-    print standings
+    print "Final Standings:", standings
     id1 = (standings[0])[0]
     winsToBeat = (standings[0])[2]
+
     for player in range(1, len(standings)):
+        # Checks to make sure no the standings table is ordered correctly
         if (standings[player])[2] > winsToBeat:
             raise ValueError("Your winner is not the winner!")
+        # Also lets you know how many people tied based on wins (alone)
         elif (standings[player])[2] == winsToBeat:
             print "There's a tie with: ", (standings[player])[0]
+
+    # Prints the winner with the best wins and opponent wins
     print "And the winner is: ", id1
 
 
 def testScenario_BasicFourPersonTournament():
+    """
+        Checks a specific four player scenario
+    """
     clean_tables()
     add_four_players()
-
-    # Create matches for round 1
-    play_tournament(4, 2)
-
-    # Final results
+    play_tournament()
     get_final_results()
 
+
 def testScenario_EvenPersonTournament():
+    """
+        Checks the even player scenario
+    """
     clean_tables()
     add_players(True)
-
-    # Run log2(numplayers) rounds
-    num_players = countPlayers()
-    num_rounds = int(ceil(log(num_players, 2)))
-    play_tournament(num_players, num_rounds)
-
+    play_tournament()
     get_final_results()
 
 
 def testScenario_OddPersonTournament():
+    """
+        Checks the odd player scenario
+    """
     clean_tables()
     add_players(False)
-
-    # Run log2(numplayers) rounds
-    num_players = countPlayers()
-    num_rounds = int(ceil(log(num_players, 2)))
-    play_tournament(num_players, num_rounds)
-
+    play_tournament()
     get_final_results()
 
 if __name__ == '__main__':
