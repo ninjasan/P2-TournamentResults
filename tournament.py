@@ -70,7 +70,7 @@ def playerStandings():
     """
     conn = connect()
     cursor = conn.cursor()
-    cursor.execute('''SELECT id, full_name, wins, matches_count AS matches
+    cursor.execute('''SELECT id, full_name, wins, matches
                       FROM standings;''')
     results = cursor.fetchall()
     conn.close()
@@ -135,11 +135,17 @@ def swissPairings():
                 player_bye_index = index
             index += 1
         # Update that player in the matches table, without an opponent
+        # Update the players table to show that player as had a bye, and a win
         cursor.execute('''INSERT INTO matches
                               (round, player_1_id)
                           VALUES ((%s), (%s));''',
-                          (cur_round,
-                           standings[player_bye_index][0],))
+                       (cur_round,
+                        standings[player_bye_index][0],))
+        cursor.execute('''UPDATE players
+                          SET wins = wins+1,
+                              byes = byes+1
+                          WHERE id=(%s);''',
+                       (standings[player_bye_index][0],))
         conn.commit()
 
     # Match up the players that don't have a bye
@@ -160,9 +166,9 @@ def swissPairings():
         cursor.execute('''INSERT INTO matches
                               (round, player_1_id, player_2_id)
                           VALUES ((%s), (%s), (%s));''',
-                          (cur_round,
-                           standings[player1][0],
-                           standings[player2][0],))
+                       (cur_round,
+                        standings[player1][0],
+                        standings[player2][0],))
         conn.commit()
         index += 2
 

@@ -29,7 +29,8 @@ DROP TABLE players;
 CREATE TABLE players (id serial primary key,
                         full_name text,
                         wins integer DEFAULT 0,
-                        losses integer DEFAULT 0
+                        losses integer DEFAULT 0,
+                        byes integer DEFAULT 0
                      );
 
 -- Create the matches table.
@@ -64,11 +65,7 @@ CREATE VIEW standings AS
     SELECT id,
            full_name,
            wins,
-           (SELECT COUNT(*)
-            FROM matches
-            WHERE (matches.player_1_id = players.id AND
-                   matches.player_2_id IS NOT NULL) OR
-                  (matches.player_2_id = players.id)) AS matches_count,
+           (wins + losses - byes) AS matches,
            (SELECT SUM(OpponentMatches.wins)
             FROM (SELECT player_1_id,
                           players1.wins
