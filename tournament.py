@@ -89,10 +89,12 @@ def reportMatch(winner, loser):
 
     # First update each players record
     cursor.execute("UPDATE players SET wins = wins+1 WHERE id=(%s);", (winner,))
-    cursor.execute("UPDATE players SET losses = losses+1 WHERE id=(%s);", (loser,))
+    cursor.execute("UPDATE players SET losses = losses+1 WHERE id=(%s);",
+                   (loser,))
     conn.commit()
 
     conn.close()
+
 
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
@@ -124,54 +126,56 @@ def swissPairings():
         cur_round += 1
 
     # Determine if someone gets a bye
-    player_index = -1
+    player_bye_index = -1
     if len(standings) % 2 != 0:
         # Find the top player that hasn't had a bye yet
         index = 0
-        while player_index == -1:
+        while player_bye_index == -1:
             if (standings[index])[3] == cur_round:
-                player_index = index
+                player_bye_index = index
             index += 1
-
-        print "Player Id: ", standings[player_index][0], " gets a bye!"
-        cursor.execute(
-                "INSERT INTO matches (round, player_1_id) VALUES ((%s), (%s));",
-                (cur_round, standings[player_index][0],))
+        # Update that player in the matches table, without an opponent
+        cursor.execute('''INSERT INTO matches
+                              (round, player_1_id)
+                          VALUES ((%s), (%s));''',
+                          (cur_round,
+                           standings[player_bye_index][0],))
         conn.commit()
 
-    print "STANDINGS: ", standings
     # Match up the players that don't have a bye
     index = 0
     while index < len(standings):
-        # Are either of these two players the players with a bye?
+        # Check if either of these two players is the player with a bye
         # If so, adjust the indexes accordingly
         player1 = index
         player2 = index + 1
-        if player1 == player_index:
+        if player1 == player_bye_index:
             player1 += 1
             player2 += 1
             index += 1
-        elif player2 == player_index:
+        elif player2 == player_bye_index:
             player2 += 1
             index += 1
-
-
-        cursor.execute(
-            "INSERT INTO matches (round, player_1_id, player_2_id) VALUES ((%s), (%s), (%s));",
-            (cur_round, standings[player1][0], standings[player2][0],))
+        # Add match to matches table
+        cursor.execute('''INSERT INTO matches
+                              (round, player_1_id, player_2_id)
+                          VALUES ((%s), (%s), (%s));''',
+                          (cur_round,
+                           standings[player1][0],
+                           standings[player2][0],))
         conn.commit()
         index += 2
 
-    # Get the pair tuples to return
+    # Get the pair tuples to return for this upcoming round
     cursor.execute('''SELECT player_1_id,
                              players1.full_name,
                              player_2_id,
                              players2.full_name
                       FROM matches
-                      INNER JOIN players AS players1
-                      ON matches.player_1_id = players1.id
-                      INNER JOIN players AS players2
-                      ON matches.player_2_id = players2.id
+                          INNER JOIN players AS players1
+                          ON matches.player_1_id = players1.id
+                          INNER JOIN players AS players2
+                          ON matches.player_2_id = players2.id
                       WHERE round = (%s);''', (cur_round,))
     results = cursor.fetchall()
     conn.close()
