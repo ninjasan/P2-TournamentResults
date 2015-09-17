@@ -8,6 +8,7 @@
 
 -- Create the tournament database, if it doesn't already exist
 -- Comment this line out of you don't need to create\recreate the database
+-- ***UNCOMMENT NEXT LINE TO CREATE THE DATABASE***
 --CREATE DATABASE tournament;
 
 -- Now that the database exists, connect to it
