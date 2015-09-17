@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-# 
+# !/usr/bin/env python
+#
 # tournament.py -- implementation of a Swiss-system tournament
 #
 
@@ -41,10 +41,10 @@ def countPlayers():
 
 def registerPlayer(name):
     """Adds a player to the tournament database.
-  
+
     The database assigns a unique serial id number for the player.  (This
     should be handled by your SQL database schema, not in your Python code.)
-  
+
     Args:
       name: the player's full name (need not be unique).
     """
@@ -86,24 +86,21 @@ def reportMatch(winner, loser):
     """
     conn = connect()
     cursor = conn.cursor()
-
-    # First update each players record
     cursor.execute("UPDATE players SET wins = wins+1 WHERE id=(%s);", (winner,))
     cursor.execute("UPDATE players SET losses = losses+1 WHERE id=(%s);",
                    (loser,))
     conn.commit()
-
     conn.close()
 
 
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
-  
+
     Assuming that there are an even number of players registered, each player
     appears exactly once in the pairings.  Each player is paired with another
     player with an equal or nearly-equal win record, that is, a player adjacent
     to him or her in the standings.
-  
+
     Returns:
       A list of tuples, each of which contains (id1, name1, id2, name2)
         id1: the first player's unique id
@@ -114,28 +111,26 @@ def swissPairings():
     conn = connect()
     cursor = conn.cursor()
 
-    # Get latest standings
     standings = playerStandings()
 
     # Determine what round is coming up
     cursor.execute("SELECT MAX(round) FROM matches;")
     cur_round = cursor.fetchone()[0]
-    if type(cur_round) != int:
-        cur_round = 0
-    else:
+    if isinstance(cur_round, int):
         cur_round += 1
+    else:
+        cur_round = 0
 
-    # Determine if someone gets a bye
+    # Determine if someone gets a bye. If someone does get a bye, it should be
+    # a player that hasn't had a bye yet. That bye counts as a win, and the
+    # match (against no one) should be accounted for in the matches table
     player_bye_index = -1
     if len(standings) % 2 != 0:
-        # Find the top player that hasn't had a bye yet
         index = 0
         while player_bye_index == -1:
             if (standings[index])[3] == cur_round:
                 player_bye_index = index
             index += 1
-        # Update that player in the matches table, without an opponent
-        # Update the players table to show that player as had a bye, and a win
         cursor.execute('''INSERT INTO matches
                               (round, player_1_id)
                           VALUES ((%s), (%s));''',
@@ -148,11 +143,9 @@ def swissPairings():
                        (standings[player_bye_index][0],))
         conn.commit()
 
-    # Match up the players that don't have a bye
+    # The rest of the players, those without a bye, get matched accordingly
     index = 0
     while index < len(standings):
-        # Check if either of these two players is the player with a bye
-        # If so, adjust the indexes accordingly
         player1 = index
         player2 = index + 1
         if player1 == player_bye_index:
@@ -162,7 +155,7 @@ def swissPairings():
         elif player2 == player_bye_index:
             player2 += 1
             index += 1
-        # Add match to matches table
+
         cursor.execute('''INSERT INTO matches
                               (round, player_1_id, player_2_id)
                           VALUES ((%s), (%s), (%s));''',
@@ -172,7 +165,6 @@ def swissPairings():
         conn.commit()
         index += 2
 
-    # Get the pair tuples to return for this upcoming round
     cursor.execute('''SELECT player_1_id,
                              players1.full_name,
                              player_2_id,
